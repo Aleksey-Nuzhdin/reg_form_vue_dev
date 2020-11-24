@@ -24,15 +24,20 @@
           <input type="text" id="middleName" />
         </div>
 
-        <div class="group__input">
-          <label for="DOB" class='label'>Дата рождения*</label>
-          <input type="date" id="DOB" />
-        </div>
-
-        <div class="group__input">
-          <label for="gender" class='label'>Пол</label>
-          <input type="radio" id="genderM" />
-          <input type="radio" id="genderF" />
+        <div class="group__DOB_gender">
+          <div class="group__input">
+            <label for="DOB" class='label'>Дата рождения*</label>
+            <input type="date" id="DOB" />
+          </div>
+          <div class="group__input">
+            <label for="gender" class='label'>Пол</label>
+            <div class="wrap_gender_input">
+              <label for="genderM" class='label__gender male'>Муж</label> 
+              <input type="radio" id="genderM" name='gender' />
+              <input type="radio" id="genderF" name='gender' />
+              <label for="genderF" class='label__gender female'>Жен</label>
+            </div>
+          </div>
         </div>
 
         <div class="btn__wrap">
@@ -45,9 +50,10 @@
         v-show="step === 2"
       >
         <h2 class="form__title">Даные</h2>
-        <div class="group">
-          <label class="form__text">Группа клиентов*</label>
 
+        <!--
+        <div class="group__input">
+          <label class="label">Группа клиентов*</label>
           <div class="group__input">
             <label for="VIP" class='label'>VIP</label>
             <input type="checkbox" id="VIP" />
@@ -63,23 +69,26 @@
             <input type="checkbox" id="OMC" />
           </div>
         </div>
+        -->
 
         <div class="group__input">
           <label for="gr" class='label'>Группа клиентов*</label>
+          
           <select name="gr" multiple>
+            <label for="vip" class="option_lable">VIP</label>
             <!-- список с возможностью выбора нескольких значений -->
-            <option value="A">VIP</option>
-            <option value="B">Проблемные</option>
-            <option value="C">ОМС</option>
+            <option value="VIP" name='vip' id='vip' >VIP</option>
+            <option value="Проблемные">Проблемные</option>
+            <option value="ОМС">ОМС</option>
           </select>
         </div>
 
         <div class="group__input">
           <label for="doctor" class='label'>Лечащий врач</label>
           <select name="doctor">
-            <option value="A">Иванов</option>
-            <option value="B">Захаров</option>
-            <option value="C">Чернышева</option>
+            <option value="Иванов">Иванов</option>
+            <option value="Захаров">Захаров</option>
+            <option value="Чернышева">Чернышева</option>
           </select>
         </div>
     
@@ -151,9 +160,9 @@
         <div class="group__input">
           <label for="typeDocument" class='label'>Тип документа</label>
           <select name="typeDocument">
-            <option value="Иванов">Паспорт</option>
-            <option value="Захаров">Свидетельство о рождении</option>
-            <option value="Чернышева">Вод. удостоверение</option>
+            <option value="passport">Паспорт</option>
+            <option value="license">Свидетельство о рождении</option>
+            <option value="certificate">Вод. удостоверение</option>
           </select>
         </div>
 
@@ -263,6 +272,9 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.option_lable{
+  position: absolute;
+}
 .wrap {
   height: 100%;
   width: 100%;
@@ -316,15 +328,29 @@ export default {
   padding: 0 15px 0 15px;
   margin-top: 20px;
 
-  & input{
+  & input,select{
     margin-top: 5px;
     padding-left: 7px;
     border: 1px solid rgb(187, 182, 182);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
     height: 30px;
-    font-size: 20px;
+    font-size: 18px;
     color: #3c3c3c;
+    box-shadow: 0px 0px 0px 3px rgb(228, 227, 227);
+    border-radius: 5px;
+
+    &:focus{
+      box-shadow: 0px 0px 0px 3px rgb(193, 229, 250);
+      border-color: #7dc9e2
+
+    }
   }
+}
+.group__DOB_gender{
+  display: flex;
+}
+.gender__input{
+  flex-direction: row;
 }
 .group_home_index{
   display: flex;
@@ -339,11 +365,43 @@ export default {
   font-size: 16px;
   color: #3c3c3c;
 }
+.wrap_gender_input{
+  display: flex;
+}
+.label__gender{
+  display: flex;
+  height: 30px;
+  width: 50px;
+  background-color: #bbb;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+
+  margin-top: 5px;
+
+  &:first-child{
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+  }
+
+  &:last-child{
+    border-left: 1px solid rgb(160, 160, 160);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
+}
+#DOB{
+  width: 135px;
+}
 #home{
   width: 110px;
 }
 #index{
   width: 110px;
+}
+#genderF,#genderM{
+  position: absolute;
+  left: -1000000px;
 }
 .btn__wrap{
   display: flex;
