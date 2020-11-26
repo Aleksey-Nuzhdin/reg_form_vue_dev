@@ -33,14 +33,14 @@
               <label for="gender" class='label'>Пол</label>
               <div class="wrap_gender_input">
                 <label for="genderM" class='label__gender male'
-                  @click="genderCheckM = true, genderCheckF = false"
-                  :class="{activ:genderCheckM}"
+                  @click="dataSet.genderCheckM = true, dataSet.genderCheckF = false"
+                  :class="{activ:dataSet.genderCheckM}"
                 >Мужчина</label> 
                 <input type="radio" id="genderM" name='gender' />
                 <input type="radio" id="genderF" name='gender' />
                 <label for="genderF" class='label__gender female'
-                  @click="genderCheckM = false, genderCheckF = true"
-                  :class="{activ:genderCheckF}"
+                  @click="dataSet.genderCheckM = false, dataSet.genderCheckF = true"
+                  :class="{activ:dataSet.genderCheckF}"
                 >Женщина</label>
               </div>
             </div>
@@ -77,33 +77,51 @@
           </div>
           -->
 
-          <div class="group__input">
+          <div class="group__input"
+            ref='groupClient'
+            @click="setInputFocus"
+          >
             <label for="gr" class='label'>Группа клиентов*</label>
             <div class="client_group">
               <div class="client_group_item"
-                v-for="(val, ind) of selectGroupClient" :key='ind'
+                v-for="(val, ind) of dataSet.selectGroupClient" :key='ind'
               > 
                 {{val}}
+                <a class="delete__client_group_item"
+                  @click.prevent='deleteClientInGroup(ind)'
+                ></a>
               </div>
             </div>
-            <select name="select_client_group"
-              v-model='clientGroup'
+            <input type="text" id="gr" 
+              @click.self="isDropSelectGroup = !isDropSelectGroup"
+              
+            />
+            <div
+              class='drom_select_group'
+              :class='{drop:isDropSelectGroup}'  
             >
-              <option 
-                v-for="(val, ind) of setGroupClient" :key='ind'
-                :value='val'  
-                :id='val' 
-                @click.prevent="addClientGroup(ind)"
-              >
-                {{val}}
-              </option>
-            </select>
+              <ul class='list__clien_group'
+                :class='{drop:isDropSelectGroup}'
+              > 
+                <li 
+                  class='item__clien_group'
+                  v-for="(val, ind) of setGroupClient" :key='ind'
+                  :value='val'  
+                  :id='val' 
+                  :class='{activ:val.activ}'
+                  @click.prevent="addClientInGroup(ind)"
+                  
+                >
+                  <label for='gr'>{{val}}</label>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div class="group__input">
             <label for="doctor" class='label'>Лечащий врач</label>
             <select name="doctor"
-              v-model='doctor'
+              v-model='dataSet.doctor'
             >
               <option value="Иванов">Иванов</option>
               <option value="Захаров">Захаров</option>
@@ -118,12 +136,16 @@
           
           <div class="group__input group__input_sms">
             <label for="sms" class='label'
-              @click='smsCheck =!smsCheck'
+              @click='dataSet.smsCheck =!dataSet.smsCheck'
             >Не отправлять СМС</label>
             <label for="sms" class='chekbox_sms'
-              @click='smsCheck =!smsCheck'
-              :class='{activ:smsCheck}'
-            ></label>
+              @click='dataSet.smsCheck =!dataSet.smsCheck'
+              :class='{activ:dataSet.smsCheck}'
+            >
+            <div class="icon_chek_delet"
+              :class='{activ:dataSet.smsCheck}'
+            ></div>
+            </label>
             
             <input type="checkbox" id="sms" name="sms" />
           </div>
@@ -164,7 +186,7 @@
 
             <div class="group__input">
               <label for="home" class='label'>Дом</label>
-              <input type="number" id="home" />
+              <input type="text" id="home" />
             </div>
           </div>
 
@@ -189,7 +211,7 @@
           <div class="group__input">
             <label for="typeDocument" class='label'>Тип документа*</label>
             <select name="typeDocument"
-              v-model="typeDocument"
+              v-model="dataSet.typeDocument"
             >
               <option value="passport">Паспорт</option>
               <option value="license">Свидетельство о рождении</option>
@@ -232,20 +254,42 @@
 export default {
   name: "Form",
   data: () => ({
+    focused: false,
     step: 1,
-    genderCheckM: false,
-    genderCheckF: false,
-    smsCheck: false,
-    setGroupClient:['VIP', 'Проблемные', 'ОМС'],
-    selectGroupClient:[],
-    doctor: '',
-    clientGroup:'',
-    typeDocument: '',
+    isDropSelectGroup: false,
+    setGroupClient:[{title:'VIP', activ:false},
+                    {title:'Проблемные', activ:false}, 
+                    {title:'ОМС', activ:false}],
+    dataSet:{
+      genderCheckM: false,
+      genderCheckF: false,
+      smsCheck: false,  
+      selectGroupClient:[],
+      doctor: '',
+      clientGroup:'',
+      typeDocument: '',
+    },
   }),
   methods:{
-    addClientGroup(ind){
-      this.selectGroupClient.push( this.setGroupClient[ind])
-      this.setGroupClient.splice(ind, 1)
+
+    addClientInGroup(ind){
+      this.setInputFocus()
+      this.setGroupClient[ind].activ = !this.setGroupClient[ind].activ
+
+      if(this.setGroupClient[ind].activ) {
+        this.dataSet.selectGroupClient.push( this.setGroupClient[ind].title)
+      }else{
+        let indItem = this.dataSet.selectGroupClient.indexOf(this.setGroupClient[ind].title)
+        this.deleteClientInGroup(indItem)
+      }
+    },
+    deleteClientInGroup(ind){
+      let obj = this.setGroupClient.find(el => {
+        if(el.title == this.dataSet.selectGroupClient[ind])
+        return el
+      })
+      this.dataSet.selectGroupClient.splice(ind, 1)
+      obj.activ = false
     },
     nextStep(){
       if(this.step+1 < 5) this.step++
@@ -261,8 +305,15 @@ export default {
     },
     regSubmit(){
       console.log('submit');
-    }
+    },
+    setInputFocus(){
+      console.log(1);
+      this.$refs.groupClient.focus();
+    },
   },
+  mounted(){
+    //this.$refs.textInput.focus()
+  }
 };
 </script>
 
@@ -344,6 +395,7 @@ export default {
   border-radius: 13px 13px 0 0;
 }
 .group__input{
+  position: relative;
   display: flex;
   flex-direction: column;
   
@@ -362,12 +414,13 @@ export default {
     border-radius: 5px;
     outline: none;
     width: 100%;
-
+    
     &:hover{
        border-color: #a6cfdd;
        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12),
                   0px 0px 0px 3px rgb(225, 244, 255);
     } 
+
     &:focus{
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12),
                   0px 0px 0px 3px rgb(193, 229, 250);
@@ -375,6 +428,105 @@ export default {
 
     }
   }
+}
+.select_client{
+  margin-top: 10px;
+}
+.client_group{
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -10px;
+  
+  //justify-content: space-between;
+}
+.client_group_item{
+  display: flex;
+  padding: 5px;
+  margin-right: 10px;
+  margin-top: 6px;
+  background-color: rgb(212, 212, 212);
+  border-radius: 5px;
+  border: 2px solid rgb(202, 201, 201);
+
+}
+.delete__client_group_item{
+  height: 20px;
+  width: 10px;
+  background-color: red;
+}
+.drom_select_group{
+  position: absolute; 
+  bottom: 0;
+  right: 16px;
+  height: 0px;
+  width: calc(100% - 32px);
+
+
+  &::before{
+    content: '';
+    display: block;
+    position: absolute;
+    height: 28px;
+    width: 28px;
+    background-color: #aaa;
+    //border-radius: 50%;
+    right: 0;
+    bottom: 1px;
+  }
+
+  &::after{
+    content: '';
+    display: block;
+    position: absolute;
+    top: -23px;
+    right: 7px;
+    z-index: 3;
+    height: 10px;
+    width: 10px;
+    border-bottom: 4px solid #333;
+    border-right: 4px solid #333;
+    transform: rotate(45deg);
+    transition: .3s;
+  }
+
+  &.drop::after{
+    transform: rotate(-135deg);
+    top: -19px;
+  }
+}
+.list__clien_group{
+  z-index: 5;
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: min-content;
+  top: 100%;
+  left: 0;
+  flex-direction: column;
+  border: 1px solid #999;
+  background-color: #ddd;
+  transform: scaleY(0);
+  transform-origin: 0px 0px;
+  opacity: 0;
+  transition: .4s;
+  &.drop{
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.item__clien_group{
+  display: block;
+  padding: 5px;
+
+  &.activ{
+    background-color: #888;
+  }
+
+  &:hover{
+    background-color: rgb(194, 194, 194);
+  }
+
+
 }
 .group__DOB_gender{
   display: flex;
@@ -449,6 +601,20 @@ export default {
   position: absolute;
   left: -1000000px;
 }
+#gr{
+  position: relative;
+  padding-right: 35px;
+
+  &::after{
+    content: "";
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 30px;
+    width: 30px;
+  }
+}
 .group__street{
   flex-grow: 1;
   
@@ -494,6 +660,22 @@ export default {
     &::before{
       left: -38px;
     }
+  }
+}
+.icon_chek_delet{
+  position: relative;
+  background: linear-gradient(90deg, rgb(255, 0, 0) 50%, rgb(21, 255, 0) 50%); 
+  width: 100%;
+  height: 100%;
+  left: 0;
+  mask-image:  url(/delete.svg), url(/check.svg);
+  mask-size: 16px 16px, 18px 18px;
+	mask-repeat: no-repeat;
+  mask-position: 8px 5px, 56px 4px;
+  transition: .4s;
+
+  &.activ{
+    mask-position: -15px 5px, 27px 4px;
   }
 }
 .btn__wrap{
