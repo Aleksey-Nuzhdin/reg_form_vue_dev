@@ -21,12 +21,14 @@ export default {
 
 <style lang="scss">
 *{
+  outline:none;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   border: none;
   font-family: "Arial",'Lucida Grande', Tahoma, Verdana, sans-serif;
 }
+
 body{
   width: 100vw;
   height: 100vh;
