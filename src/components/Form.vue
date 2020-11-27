@@ -25,7 +25,7 @@
             <span class="error__text"
               v-if="!$v.dataSet.surname.required && $v.dataSet.surname.$dirty"
             >
-              Это поле не должно быть пустым
+              Напишите фамилию
             </span>
             <span class="error__text"
               v-if="!$v.dataSet.surname.alpha && $v.dataSet.surname.$dirty"
@@ -46,7 +46,7 @@
             <span class="error__text"
               v-if="!$v.dataSet.name.required && $v.dataSet.name.$dirty"
             >
-              Это поле не должно быть пустым
+              Напишите имя
             </span>
             <span class="error__text"
               v-if="!$v.dataSet.name.alpha && $v.dataSet.name.$dirty"
@@ -126,54 +126,61 @@
         >
           <h2 class="form__title">Даные</h2>
 
-          <div class="group__input"
-            @click.stop=""
-            @keydown.esc='isDropSelectGroup = false'
-          >
-            <label for="gr" class='label'>Группа клиентов*</label>
-            <div class="client_group"
-              @click.prevent.self="isDropSelectGroup = false"
+          <div class="wp">
+            <div class="group__input"
+              @click.stop=""
+              @keydown.esc='isDropSelectGroup = false'
             >
-              <div class="client_group_item"
-                v-for="(val, ind) of dataSet.selectGroupClient" :key='ind'
-              > 
-                {{val}}
-                <a class="delete__client_group_item"
-                  @click.prevent='deleteClientInGroup(ind),saveInLocalStorage()'
-                ></a>
+              <label for="gr" class='label'>Группа клиентов*</label>
+              <div class="client_group"
+                @click.prevent.self="isDropSelectGroup = false"
+              >
+                <div class="client_group_item"
+                  v-for="(val, ind) of dataSet.selectGroupClient" :key='ind'
+                > 
+                  {{val}}
+                  <a class="delete__client_group_item"
+                    @click.prevent='deleteClientInGroup(ind),saveInLocalStorage()'
+                  ></a>
+                </div>
+              </div>
+              <input type="text" id="gr" 
+                @click.prevent.self="isDropSelectGroup = !isDropSelectGroup"
+                :class="{invalid:(!$v.coutGroup.minValue && isMinValCheck)}"
+              />
+              <label for="gr" class="arrow_drop"
+                @click.prevent.self="isDropSelectGroup = !isDropSelectGroup"
+                :class='{drop:isDropSelectGroup}'
+              ></label>
+              <div
+                class='drom_select_group'
+                :class='{drop:isDropSelectGroup}'
+                @click.prevent.self="isDropSelectGroup = !isDropSelectGroup"              
+              >
+
+                <ul class='list__clien_group'
+                  :class='{drop:isDropSelectGroup}'
+                  @click.stop=""
+                > 
+                  <label for='gr' 
+                    class='item__clien_group'
+                    v-for="(val, ind) of setGroupClient" :key='ind'
+                    :value='val.title'  
+                    :id='val.title' 
+                    :class='{activ:val.activ}'
+                    @click.prevent="addClientInGroup(ind),saveInLocalStorage()"
+                    
+                  >
+                    {{val.title}}
+                  </label>
+                </ul>
               </div>
             </div>
-            <input type="text" id="gr" 
-              @click.prevent.self="isDropSelectGroup = !isDropSelectGroup"
-              
-            />
-            <label for="gr" class="arrow_drop"
-              @click.prevent.self="isDropSelectGroup = !isDropSelectGroup"
-              :class='{drop:isDropSelectGroup}'
-            ></label>
-            <div
-              class='drom_select_group'
-              :class='{drop:isDropSelectGroup}'
-              @click.prevent.self="isDropSelectGroup = !isDropSelectGroup"              
-            >
-
-              <ul class='list__clien_group'
-                :class='{drop:isDropSelectGroup}'
-                @click.stop=""
-              > 
-                <label for='gr' 
-                  class='item__clien_group'
-                  v-for="(val, ind) of setGroupClient" :key='ind'
-                  :value='val.title'  
-                  :id='val.title' 
-                  :class='{activ:val.activ}'
-                  @click.prevent="addClientInGroup(ind),saveInLocalStorage()"
-                  
-                >
-                  {{val.title}}
-                </label>
-              </ul>
-            </div>
+            <span class="error__text wp__text"
+                v-if="!$v.coutGroup.minValue && isMinValCheck"
+              >
+                Выберете хотябы одну категорию
+            </span>
           </div>
 
           <div class="group__input">
@@ -186,7 +193,7 @@
             ></label>
             <select name="doctor" id='doctor'
               v-model='dataSet.doctor'
-              @click="isDropSelectDoctor = !isDropSelectDoctor"
+              @click="isDropSelectDoctor = !isDropSelectDoctor, saveInLocalStorage()"
             >
               <option value="Иванов">Иванов</option>
               <option value="Захаров">Захаров</option>
@@ -210,7 +217,7 @@
             <span class="error__text"
               v-if="!$v.dataSet.numberPhone.required && $v.dataSet.numberPhone.$dirty"
             >
-              Это поле не должно быть пустым
+              Укажите телефон
             </span>
             <span class="error__text"
               v-else-if="!$v.dataSet.numberPhone.minValue && $v.dataSet.numberPhone.$dirty"
@@ -236,10 +243,10 @@
           
           <div class="group__input group__input_sms">
             <label for="sms" class='label'
-              @click='dataSet.smsCheck =!dataSet.smsCheck'
+              @click='dataSet.smsCheck =!dataSet.smsCheck, saveInLocalStorage()'
             >Не отправлять СМС</label>
             <label for="sms" class='chekbox_sms'
-              @click='dataSet.smsCheck =!dataSet.smsCheck'
+              @click='dataSet.smsCheck =!dataSet.smsCheck, saveInLocalStorage()'
               :class='{activ:dataSet.smsCheck}'
             >
             <div class="icon_chek_delet"
@@ -252,7 +259,13 @@
 
           <div class="btn__wrap">
             <button @click.prevent="previousStep" class='btn__step'>Назад</button>
-            <button @click.prevent="nextStep" class='btn__step'>Далее</button>
+            <button @click.prevent="nextStep" class='btn__step'
+              :class='{activ: ( 
+                !this.$v.dataSet.numberPhone.$invalid &&
+                !this.$v.coutGroup.$invalid
+
+              )}'
+            >Далее</button>
           </div>
         </div>
       </transition>
@@ -267,21 +280,49 @@
             <label for="coutry" class='label'>Страна</label>
             <input type="text" id="coutry"
               v-model.trim="dataSet.coutry"
+              @blur="$v.dataSet.coutry.$touch(), saveInLocalStorage()"
+              :class="{invalid:(!$v.dataSet.coutry.alpha && $v.dataSet.coutry.$dirty)}"
             />
+            <span class="error__text"
+              v-if="!$v.dataSet.coutry.alpha && $v.dataSet.coutry.$dirty"
+            >
+              Название стрны не должно содержать цифр или специальных символов
+            </span>
           </div>
 
           <div class="group__input">
             <label for="region" class='label'>Область</label>
             <input type="text" id="region" 
               v-model.trim="dataSet.region"
+              @blur="$v.dataSet.region.$touch(), saveInLocalStorage()"
+              :class="{invalid:(!$v.dataSet.region.alpha && $v.dataSet.region.$dirty)}"
             />
+            <span class="error__text"
+              v-if="!$v.dataSet.region.alpha && $v.dataSet.region.$dirty"
+            >
+              Название региона не должно содержать цифр или специальных символов
+            </span>
           </div>
 
           <div class="group__input">
             <label for="city" class='label'>Город*</label>
             <input type="text" id="city" 
               v-model.trim="dataSet.city"
+              @blur="$v.dataSet.city.$touch(), saveInLocalStorage()"
+              :class="{invalid:( (!$v.dataSet.city.alpha && $v.dataSet.city.$dirty)
+                              || (!$v.dataSet.city.required && $v.dataSet.city.$dirty)
+              )}"
             />
+            <span class="error__text"
+              v-if="!$v.dataSet.city.alpha && $v.dataSet.city.$dirty"
+            >
+              Название города не должно содержать цифр или специальных символов
+            </span>
+            <span class="error__text"
+              v-if="!$v.dataSet.city.required && $v.dataSet.city.$dirty"
+            >
+              Укажите город
+            </span>
           </div>
 
           <div class="group_home_street">
@@ -289,6 +330,7 @@
               <label for="street" class='label'>Улица</label>
               <input type="text" id="street" 
                 v-model.trim="dataSet.street"
+                @blur="saveInLocalStorage()"
               />
             </div>
 
@@ -304,12 +346,27 @@
             <label for="index" class='label'>Индекс</label>
             <input type="number" id="index" 
               v-model.trim="dataSet.index"
+              @blur="$v.dataSet.index.$touch(), saveInLocalStorage()"
+              :class="{invalid:(!$v.dataSet.index.decimal && $v.dataSet.index.$dirty)}"
             />
+            <span class="error__text"
+              v-if="!$v.dataSet.index.decimal && $v.dataSet.index.$dirty"
+            >
+              Индекс должен состоять только из цифр
+            </span>
           </div>
           
           <div class="btn__wrap">
             <button @click.prevent="previousStep" class='btn__step'>Назад</button>
-            <button @click.prevent="nextStep" class='btn__step'>Далее</button>
+            <button @click.prevent="nextStep" class='btn__step'
+              :class='{activ: ( 
+                !this.$v.dataSet.coutry.$invalid &&
+                !this.$v.dataSet.region.$invalid &&
+                !this.$v.dataSet.city.$invalid 
+                
+              )}'
+            
+            >Далее</button>
           </div>
         </div>
       </transition>
@@ -378,7 +435,7 @@
 </template>
 
 <script>
-import {helpers , required, minLength, minValue, maxValue, numeric} from 'vuelidate/lib/validators';
+import {helpers , required, minLength, minValue, maxValue, numeric, decimal} from 'vuelidate/lib/validators';
 const alpha = helpers.regex('alpha', /^[a-zA-Zа-яёА-ЯЁ]*$/)
 
 export default {
@@ -389,6 +446,7 @@ export default {
     isDropSelectGroup: false,
     isDropSelectDocument: false,
     isDropSelectDoctor: false,
+    isMinValCheck: false,
     coutGroup: 0,
     setGroupClient:[{title:'VIP', activ:false},
                     {title:'Проблемные', activ:false}, 
@@ -440,8 +498,18 @@ export default {
         maxValue:maxValue(79999999999),
         numeric,
       },
+      coutry:{
+        alpha,
+      },
+      region:{
+        alpha,
+      },
       city:{
+        alpha,
         required,
+      },
+      index:{
+        decimal,
       },
       typeDocument:{
         required,
@@ -495,6 +563,30 @@ export default {
         }
       }
 
+      if(this.step == 2){
+        if(
+          this.$v.dataSet.numberPhone.$invalid ||
+          this.$v.coutGroup.$invalid 
+
+        ){
+          this.isMinValCheck = true
+          this.$v.dataSet.numberPhone.$touch()
+          this.$v.coutGroup.$invalid.$touch()
+          return
+        }
+      }
+
+      if(this.step == 3){
+        if(
+          this.$v.dataSet.coutry.$invalid ||
+          this.$v.dataSet.region.$invalid ||
+          this.$v.dataSet.city.$invalid 
+        ){
+          this.$v.dataSet.coutry.$touch()
+          this.$v.dataSet.region.$touch()
+          this.$v.dataSet.city.$touch()
+        }
+      }
 
       if(this.step+1 < 5) this.step++
      
@@ -671,7 +763,9 @@ select:not(:-internal-list-box) {
   font-size: 14px;
   color: rgb(95, 95, 95);
 }
-
+.wp__text{
+  padding-left: 15px;
+}
 .select_client{
   margin-top: 10px;
 }
