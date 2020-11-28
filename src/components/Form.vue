@@ -19,7 +19,7 @@
           <h2 class="form__title">Создание клиента</h2>
 
           <div class="group__input">
-            <label for="surname" class='label'>Фамилия*</label>
+            <label for="surname" class='label'>Фамилия<span class="color_red">*</span></label>
             <input type="text" id="surname" 
               v-model.trim="dataSet.surname"
               @blur="$v.dataSet.surname.$touch(), saveInLocalStorage()"
@@ -40,7 +40,7 @@
           </div>
 
           <div class="group__input">
-            <label for="name" class='label'>Имя*</label>
+            <label for="name" class='label'>Имя<span class="color_red">*</span></label>
             <input type="text" id="name" 
               v-model.trim="dataSet.name"
               @blur="$v.dataSet.name.$touch(), saveInLocalStorage()"
@@ -77,7 +77,7 @@
 
           <div class="group__DOB_gender">
             <div class="group__input">
-              <label for="DOB" class='label'>Дата рождения*</label>
+              <label for="DOB" class='label'>Дата рождения<span class="color_red">*</span></label>
               <input type="date" id="DOB"
                 v-model="dataSet.DOB"
                 @blur="$v.dataSet.DOB.$touch(), saveInLocalStorage()"
@@ -109,7 +109,9 @@
               </div>
             </div>
           </div>
-
+          <span class="span__prompt">
+            Поля отмеченные <span class="color_red">*</span>, обязательны для заполнения
+          </span>
           <div class="btn__wrap">
             <button @click.prevent="nextStep" class='btn__step'
               :class='{activ: ( 
@@ -135,7 +137,7 @@
               @click.stop=""
               @keydown.esc='isDropSelectGroup = false'
             >
-              <label for="gr" class='label'>Группа клиентов*</label>
+              <label for="gr" class='label'>Группа клиентов<span class="color_red">*</span></label>
               <div class="client_group"
                 @click.prevent.self="isDropSelectGroup = false"
               >
@@ -206,7 +208,7 @@
           </div>
       
           <div class="group__input">
-            <label for="numberPhone" class='label'>Номер телефона*</label>
+            <label for="numberPhone" class='label'>Номер телефона<span class="color_red">*</span></label>
             <input type="text" id="numberPhone" 
               v-model.trim="dataSet.numberPhone"
               @blur="$v.dataSet.numberPhone.$touch(), saveInLocalStorage()"
@@ -319,7 +321,7 @@
           </div>
 
           <div class="group__input">
-            <label for="city" class='label'>Город*</label>
+            <label for="city" class='label'>Город<span class="color_red">*</span></label>
             <input type="text" id="city" 
               v-model.trim="dataSet.city"
               @blur="$v.dataSet.city.$touch(), saveInLocalStorage()"
@@ -357,7 +359,7 @@
           </div>
 
           <div class="group__input">
-            <label for="index" class='label'>Индекс</label>
+            <label for="index" class='label label__index'>Индекс</label>
             <input type="text" id="index" 
               v-model.trim="dataSet.index"
               @blur="$v.dataSet.index.$touch(), saveInLocalStorage()"
@@ -406,7 +408,7 @@
             <div class="group__input">
               <label for="typeDocument" class='label'
                 @click="isDropSelectDocument = !isDropSelectDocument"
-              >Тип документа*</label>
+              >Тип документа<span class="color_red">*</span></label>
               <label for="typeDocument" class='arrow_drop'
                 :class="{drop:isDropSelectDocument}"
               ></label>
@@ -465,7 +467,7 @@
           </div>
 
           <div class="group__input">
-            <label for="dateIssue" class='label'>Дата выдачи*</label>
+            <label for="dateIssue" class='label'>Дата выдачи<span class="color_red">*</span></label>
             <input type="date" id="dateIssue" 
               v-model.trim="dataSet.dateDoc"
               @blur="$v.dataSet.dateDoc.$touch(), saveInLocalStorage()"
@@ -497,6 +499,7 @@
 
 <script>
 import {helpers , required, minLength, maxLength, minValue, maxValue, numeric, decimal} from 'vuelidate/lib/validators';
+//Валидатор для русского алфавита
 const alpha = helpers.regex('alpha', /^[a-zA-Zа-яёА-ЯЁ]*$/)
 
 export default {
@@ -619,20 +622,25 @@ export default {
   },
   methods:{
     saveInLocalStorage(){
+      //Сохроняем данные в localStorage,
+      //Чтобы не потерять их если что-то пойдёт не так
       localStorage.dataSet = JSON.stringify(this.dataSet)
       localStorage.coutGroup = JSON.stringify(this.coutGroup)
       localStorage.setGroupClient = JSON.stringify(this.setGroupClient)
     },
     addClientInGroup(ind){
+      //
       this.setGroupClient[ind].activ = !this.setGroupClient[ind].activ
-      this.coutGroup++
 
       if(this.setGroupClient[ind].activ) {
         this.dataSet.selectGroupClient.push( this.setGroupClient[ind].title)
+        this.coutGroup++
       }else{
         let indItem = this.dataSet.selectGroupClient.indexOf(this.setGroupClient[ind].title)
         this.deleteClientInGroup(indItem)
       }
+
+      
     },
     deleteClientInGroup(ind){
       this.coutGroup--
@@ -644,7 +652,8 @@ export default {
       obj.activ = false
     },
     nextStep(){
-      //Проверяем форму на прмежуточную валидацию
+      //Проверяем форму на промежуточную валидацию
+      //И если не проходит, останавливаем функцию
       if(this.step == 1){
         if( this.$v.dataSet.name.$invalid ||
             this.$v.dataSet.surname.$invalid ||
@@ -698,14 +707,8 @@ export default {
       this.isMinValCheck = false
       setTimeout(()=>{this.isShowTost = false}, 1500)
     },
-    regSubmit(){
-      //если не форма не проходит валидацию запускаем проверку и остонавлием функцию
-      if(this.$v.$invalid){
-        this.$v.$touch()
-        return
-      }
-
-      //сбрасываем данные для создания нового пользователья
+    resetDataForm(){
+      //Очищаем localStorage
       localStorage.dataSet = ''
       localStorage.coutGroup = 0
       localStorage.setGroupClient = ''
@@ -715,14 +718,26 @@ export default {
       this.isShowTost = true
       this.coutGroup = 0
       this.setGroupClient = this.resetGroupClient.map(el => el)
+    },
+    regSubmit(){
+      //если не форма не проходит валидацию запускаем проверку и остонавлием функцию
+      if(this.$v.$invalid){
+        this.$v.$touch()
+        return
+      }
 
-      //Показываем сообщени о успешном создании
+      //сбрасываем данные для создания нового пользователья
+      this.resetDataForm()
+
+      //Показываем сообщение о успешном создании
       this.showTost()
 
       //вместо для пуша на сервер)
       console.log(this.dataSet);
     },
     updateHeight(){
+      //обновляем значения размера экрана, для позиционирования
+      //при изменениях формы
       this.moveTopForm = (this.$refs.wrap.clientHeight/2)-250
       if(this.moveTopForm <= 7) this.moveTopForm = 7
     },
@@ -732,13 +747,11 @@ export default {
   },
   mounted(){
     this.updateHeight()
+    //Загружаем сохранные данные
     if(localStorage.dataSet) this.dataSet = JSON.parse(localStorage.dataSet)
     if(localStorage.coutGroup) this.coutGroup = JSON.parse(localStorage.coutGroup)
     if(localStorage.setGroupClient) this.setGroupClient = JSON.parse(localStorage.setGroupClient)
-    
-     
-     
-     
+       
   }
 };
 </script>
@@ -756,26 +769,17 @@ export default {
   opacity: 1;
 }
 
-.toast-enter{
+.toast-enter ,.toast-leave-to{
   transform: translateY(-100%);
   transition: all .3s ease;
   opacity: 0;
 }
-.toast-enter-to{
+.toast-enter-to, .toast-leave{
   transform: translateY(0);
   transition: all .3s ease;
   opacity: 1;
 }
-.toast-leave{
-  transform: translateY(0);
-  transition: all .3s ease;
-  opacity: 1;
-}
-.toast-leave-to{
-  transform: translateY(-100%);
-  transition: all .3s ease;
-  opacity: 0;
-}
+
 
 .toast__mesage{
   position: absolute;
@@ -791,7 +795,7 @@ export default {
   background-color: rgba(71, 71, 71, 0.74);
   border-radius: 10px;
   color: #eeeded;
-  font-size: 25px;
+  font-size: 22px;
   font-weight: bold;
 }
 
@@ -809,6 +813,16 @@ select{
     height: 30px;
     width: 30px;
   }
+}
+
+.span__prompt{
+  padding: 0 15px 0 15px;
+  margin-top: 25px;
+  font-size: 12px;
+  vertical-align: bottom;
+  color: rgb(97, 97, 97);
+  height: 0;
+  line-height: 0;
 }
 select:not(:-internal-list-box) {
     overflow: hidden;
@@ -829,7 +843,7 @@ select:not(:-internal-list-box) {
 .wrap {
   height: 100%;
   width: 100%;
-  
+  min-width: 400px;
   display: flex;
   justify-content: center;
 }
@@ -916,7 +930,7 @@ select:not(:-internal-list-box) {
   font-size: 14px;
   color: rgb(95, 95, 95);
 }
-.wp__text span{
+.wp__text .error__text{
   padding-left: 15px;
 }
 
@@ -927,8 +941,6 @@ select:not(:-internal-list-box) {
   display: flex;
   flex-wrap: wrap;
   margin-right: -10px;
-  
-  //justify-content: space-between;
 }
 .client_group_item{
   display: flex;
@@ -984,7 +996,6 @@ select:not(:-internal-list-box) {
   right: 16px;
   height: 0px;
   width: calc(100% - 32px);
-
   z-index: 1;
 
   &::before{
@@ -994,7 +1005,6 @@ select:not(:-internal-list-box) {
     height: 28px;
     width: 28px;
     background-color: rgb(230, 227, 227);
-    //border-radius: 50%;
     right: -1px;
     bottom: 0;
     border-radius: 0 5px 5px 0;
@@ -1057,6 +1067,9 @@ select:not(:-internal-list-box) {
 
 
 }
+.label__index{
+  width: 110px;
+}
 .label__client_item{
   width: 100%;
   height: 100%;
@@ -1083,6 +1096,7 @@ select:not(:-internal-list-box) {
   font-family: "Arial";
   font-weight: bold;
   font-size: 16px;
+  height: 20px;
   color: #3c3c3c;
 }
 .wrap_gender_input{
@@ -1196,6 +1210,7 @@ select:not(:-internal-list-box) {
     }
   }
 }
+
 .icon_chek_delet{
   position: relative;
   background: linear-gradient(90deg, rgb(255, 0, 0) 50%, rgb(21, 255, 0) 50%); 
@@ -1246,5 +1261,15 @@ select:not(:-internal-list-box) {
     box-shadow: -10px -10px 44px -20px rgba(0, 64, 112, 1) inset;
     color: rgb(230, 227, 227); 
   }
+}
+.color_red{
+  display: inline-block;
+  color: rgb(185, 7, 7);
+  padding-left: 0;
+  font-size: 16px;
+  line-height: 1px;
+  font-weight: 1000;
+  height: 20px;
+  text-align: center;
 }
 </style>
