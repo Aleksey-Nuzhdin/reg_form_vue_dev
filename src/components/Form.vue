@@ -3,6 +3,11 @@
     ref="wrap"
     @click.self="isDropSelectGroup = false"
   >
+    <transition name="toast">
+      <div v-if="isShowTost" class="toast__mesage">
+        Клиент создан
+      </div>
+    </transition>
     <form class="form" novalidate
       @submit.prevent="regSubmit"
       :style="{marginTop:moveTopForm + 'px'}"
@@ -81,7 +86,6 @@
               <span class="error__text"
                 v-if="!$v.dataSet.DOB.required && $v.dataSet.DOB.$dirty"
               >
-                <span class="iconn_error"></span>
                 Укажите дату
               </span>
             </div>
@@ -126,7 +130,7 @@
         >
           <h2 class="form__title">Даные</h2>
 
-          <div class="wp">
+          <div class="wp__text">
             <div class="group__input"
               @click.stop=""
               @keydown.esc='isDropSelectGroup = false'
@@ -203,13 +207,16 @@
       
           <div class="group__input">
             <label for="numberPhone" class='label'>Номер телефона*</label>
-            <input type="tel" id="numberPhone" 
+            <input type="text" id="numberPhone" 
               v-model.trim="dataSet.numberPhone"
               @blur="$v.dataSet.numberPhone.$touch(), saveInLocalStorage()"
               :class="{invalid:((!$v.dataSet.numberPhone.required && $v.dataSet.numberPhone.$dirty)
-                || (!$v.dataSet.numberPhone.minValue && $v.dataSet.numberPhone.$dirty)
+                || (!$v.dataSet.numberPhone.minLength && $v.dataSet.numberPhone.$dirty)
                 || (!$v.dataSet.numberPhone.numeric && $v.dataSet.numberPhone.$dirty)
+                || (!$v.dataSet.numberPhone.minValue && $v.dataSet.numberPhone.$dirty)
                 || (!$v.dataSet.numberPhone.maxValue && $v.dataSet.numberPhone.$dirty)
+                || (!$v.dataSet.numberPhone.maxLength && $v.dataSet.numberPhone.$dirty)
+                || (!$v.dataSet.numberPhone.minLength && $v.dataSet.numberPhone.$dirty)
               )}"
               
             />
@@ -220,17 +227,24 @@
               Укажите телефон
             </span>
             <span class="error__text"
-              v-else-if="!$v.dataSet.numberPhone.minValue && $v.dataSet.numberPhone.$dirty"
-            >
-              Слишком короткий номер
-            </span>
-            <span class="error__text"
               v-else-if="!$v.dataSet.numberPhone.numeric && $v.dataSet.numberPhone.$dirty"
             >
               Номер должен состоять только из цифр
             </span>
             <span class="error__text"
-              v-else-if="!$v.dataSet.numberPhone.maxValue && $v.dataSet.numberPhone.$dirty"
+              v-else-if="!$v.dataSet.numberPhone.minLength && $v.dataSet.numberPhone.$dirty"
+            >
+              Слишком короткий номер
+            </span>
+            <span class="error__text"
+              v-else-if="!$v.dataSet.numberPhone.maxLength && $v.dataSet.numberPhone.$dirty"
+            >
+              Слишком длинный номер
+            </span>
+            <span class="error__text"
+              v-else-if="(!$v.dataSet.numberPhone.maxValue && $v.dataSet.numberPhone.$dirty)
+                      || (!$v.dataSet.numberPhone.minValue && $v.dataSet.numberPhone.$dirty)
+              "
             >
               Номер должен начинаться с 7
             </span>
@@ -344,15 +358,25 @@
 
           <div class="group__input">
             <label for="index" class='label'>Индекс</label>
-            <input type="number" id="index" 
+            <input type="text" id="index" 
               v-model.trim="dataSet.index"
               @blur="$v.dataSet.index.$touch(), saveInLocalStorage()"
-              :class="{invalid:(!$v.dataSet.index.decimal && $v.dataSet.index.$dirty)}"
+              :class="{invalid:((!$v.dataSet.index.numeric && $v.dataSet.index.$dirty
+                              || !$v.dataSet.index.maxLength && $v.dataSet.index.$dirty
+                              || !$v.dataSet.index.minLength && $v.dataSet.index.$dirty
+              ))}"
             />
             <span class="error__text"
-              v-if="!$v.dataSet.index.decimal && $v.dataSet.index.$dirty"
+              v-if="!$v.dataSet.index.numeric && $v.dataSet.index.$dirty"
             >
               Индекс должен состоять только из цифр
+            </span>
+            <span class="error__text"
+              v-else-if=" (!$v.dataSet.index.maxLength && $v.dataSet.index.$dirty)
+                  || (!$v.dataSet.index.minLength && $v.dataSet.index.$dirty)
+              "
+            >
+              Индекс должен состоять из 6 цифр
             </span>
           </div>
           
@@ -362,6 +386,7 @@
               :class='{activ: ( 
                 !this.$v.dataSet.coutry.$invalid &&
                 !this.$v.dataSet.region.$invalid &&
+                !this.$v.dataSet.index.$invalid &&
                 !this.$v.dataSet.city.$invalid 
                 
               )}'
@@ -377,56 +402,92 @@
         >
           <h2 class="form__title">Документ</h2>
 
-          <div class="group__input">
-            <label for="typeDocument" class='label'
-              @click="isDropSelectDocument = !isDropSelectDocument"
-            >Тип документа*</label>
-            <label for="typeDocument" class='arrow_drop'
-              :class="{drop:isDropSelectDocument}"
-            ></label>
-            <select name="typeDocument"
-              id="typeDocument"
-              v-model="dataSet.typeDocument"
-              @click="isDropSelectDocument = !isDropSelectDocument"
+          <div class="wp__text">
+            <div class="group__input">
+              <label for="typeDocument" class='label'
+                @click="isDropSelectDocument = !isDropSelectDocument"
+              >Тип документа*</label>
+              <label for="typeDocument" class='arrow_drop'
+                :class="{drop:isDropSelectDocument}"
+              ></label>
+              <select name="typeDocument"
+                id="typeDocument"
+                v-model="dataSet.typeDocument"
+                @click="isDropSelectDocument = !isDropSelectDocument"
+                @blur="$v.dataSet.typeDocument.$touch(), saveInLocalStorage()"
+                :class="{invalid:((!$v.dataSet.typeDocument.required && $v.dataSet.typeDocument.$dirty))}"
+              >
+                <option value="passport">Паспорт</option>
+                <option value="license">Свидетельство о рождении</option>
+                <option value="certificate">Вод. удостоверение</option>
+              </select>
+            </div>
+            <span class="error__text"
+              v-if="!$v.dataSet.typeDocument.required && $v.dataSet.typeDocument.$dirty"
             >
-              <option value="passport">Паспорт</option>
-              <option value="license">Свидетельство о рождении</option>
-              <option value="certificate">Вод. удостоверение</option>
-            </select>
+              Выберите тип документа
+            </span>
           </div>
+
 
           <div class="group__input">
             <label for="issuedBy" class='label'>Кем выдан</label>
             <input type="text" id="issuedBy" 
               v-model.trim="dataSet.issuedBy"
+              @blur="saveInLocalStorage()"
             />
           </div>
 
-          <div class="group__series_number">
-            <div class="group__input">
-              <label for="series" class='label'>Серия</label>
-              <input type="text" id="series" 
-                v-model.trim="dataSet.seriesDoc"
-              />
-            </div>
+          <div class="wp__text">
+            <div class="group__series_number">
+              <div class="group__input">
+                <label for="series" class='label'>Серия</label>
+                <input type="text" id="series" 
+                  v-model.trim="dataSet.seriesDoc"
+                  @blur="saveInLocalStorage()"
+                />
+              </div>
 
-            <div class="group__input">
-              <label for="number" class='label'>Номер</label>
-              <input type="text" id="number" 
-                v-model.trim="dataSet.numberDoc"
-              />
+              <div class="group__input">
+                <label for="number" class='label'>Номер</label>
+                <input type="text" id="number" 
+                  v-model.trim="dataSet.numberDoc"
+                  @blur="$v.dataSet.numberDoc.$touch(), saveInLocalStorage()"
+                  :class="{invalid:((!$v.dataSet.numberDoc.numeric && $v.dataSet.numberDoc.$dirty))}"
+                />
+              </div>
             </div>
+            <span class="error__text"
+              v-if="!$v.dataSet.numberDoc.numeric && $v.dataSet.numberDoc.$dirty"
+            >
+              Номер долджен состоять только из цифр
+            </span>
           </div>
 
           <div class="group__input">
-            <label for="dateIssue" class='label'>Дата выдачи</label>
+            <label for="dateIssue" class='label'>Дата выдачи*</label>
             <input type="date" id="dateIssue" 
               v-model.trim="dataSet.dateDoc"
+              @blur="$v.dataSet.dateDoc.$touch(), saveInLocalStorage()"
+              :class="{invalid:((!$v.dataSet.dateDoc.required && $v.dataSet.dateDoc.$dirty))}"
             />
+            <span class="error__text"
+              v-if="!$v.dataSet.dateDoc.required && $v.dataSet.dateDoc.$dirty"
+            >
+              Укажите дату
+            </span>
           </div>
           <div class="btn__wrap">
             <button @click.prevent="previousStep" class='btn__step'>Назад</button>
-            <button type="submit" class='btn__step'>Создать</button>
+            <button type="submit" class='btn__step'
+              :class='{activ: ( 
+                !this.$v.dataSet.dateDoc.$invalid &&
+                !this.$v.dataSet.numberDoc.$invalid &&
+                !this.$v.dataSet.typeDocument.$invalid
+             
+                
+              )}'
+            >Создать</button>
           </div>
         </div>
       </transition>
@@ -435,13 +496,13 @@
 </template>
 
 <script>
-import {helpers , required, minLength, minValue, maxValue, numeric, decimal} from 'vuelidate/lib/validators';
+import {helpers , required, minLength, maxLength, minValue, maxValue, numeric, decimal} from 'vuelidate/lib/validators';
 const alpha = helpers.regex('alpha', /^[a-zA-Zа-яёА-ЯЁ]*$/)
 
 export default {
   name: "Form",
   data: () => ({
-    focused: false,
+    isShowTost: false,
     step: 1,
     isDropSelectGroup: false,
     isDropSelectDocument: false,
@@ -449,6 +510,9 @@ export default {
     isMinValCheck: false,
     coutGroup: 0,
     setGroupClient:[{title:'VIP', activ:false},
+                    {title:'Проблемные', activ:false}, 
+                    {title:'ОМС', activ:false}],
+    resetGroupClient:[{title:'VIP', activ:false},
                     {title:'Проблемные', activ:false}, 
                     {title:'ОМС', activ:false}],
     moveTopForm: 0,
@@ -475,6 +539,30 @@ export default {
       doctor: '',
       typeDocument: '',
     },
+    dataReset:{
+      surname:'',
+      name:'',
+      middleName:'',
+      DOB:'',
+      numberPhone:'',
+      coutry:'',
+      region:'',
+      city:'',
+      street:'',
+      home:'',
+      index:'',
+      issuedBy:'',
+      seriesDoc:'',
+      numberDoc:'',
+      dateDoc:'',
+      genderCheckM: false,
+      genderCheckF: false,
+      smsCheck: false,  
+      selectGroupClient:[],
+      doctor: '',
+      typeDocument: '',
+    },
+    
   }),
   validations:{
     dataSet:{
@@ -496,6 +584,8 @@ export default {
         required,
         minValue:minValue(70000000000),
         maxValue:maxValue(79999999999),
+        maxLength:maxLength(11),
+        minLength:minLength(11),
         numeric,
       },
       coutry:{
@@ -509,10 +599,15 @@ export default {
         required,
       },
       index:{
-        decimal,
+        numeric,
+        maxLength:maxLength(6),
+        minLength:minLength(6),
       },
       typeDocument:{
         required,
+      },
+      numberDoc:{
+        numeric,
       },
       dateDoc:{
         required,
@@ -549,6 +644,7 @@ export default {
       obj.activ = false
     },
     nextStep(){
+      //Проверяем форму на прмежуточную валидацию
       if(this.step == 1){
         if( this.$v.dataSet.name.$invalid ||
             this.$v.dataSet.surname.$invalid ||
@@ -571,7 +667,7 @@ export default {
         ){
           this.isMinValCheck = true
           this.$v.dataSet.numberPhone.$touch()
-          this.$v.coutGroup.$invalid.$touch()
+          this.$v.coutGroup.$touch()
           return
         }
       }
@@ -580,11 +676,15 @@ export default {
         if(
           this.$v.dataSet.coutry.$invalid ||
           this.$v.dataSet.region.$invalid ||
-          this.$v.dataSet.city.$invalid 
+          this.$v.dataSet.index.$invalid ||
+          this.$v.dataSet.city.$invalid
+          
         ){
           this.$v.dataSet.coutry.$touch()
           this.$v.dataSet.region.$touch()
           this.$v.dataSet.city.$touch()
+          this.$v.dataSet.index.$touch()
+          return
         }
       }
 
@@ -592,39 +692,53 @@ export default {
      
     },  
     previousStep(){
-      if( this.step-1 < 1 ) this.step = 1
-      else this.step-- 
-      
+      if( this.step-1 > 0 ) this.step-- 
+    },
+    showTost(){
+      this.isMinValCheck = false
+      setTimeout(()=>{this.isShowTost = false}, 1500)
     },
     regSubmit(){
+      //если не форма не проходит валидацию запускаем проверку и остонавлием функцию
+      if(this.$v.$invalid){
+        this.$v.$touch()
+        return
+      }
+
+      //сбрасываем данные для создания нового пользователья
       localStorage.dataSet = ''
       localStorage.coutGroup = 0
       localStorage.setGroupClient = ''
-      console.log('submit');
+      this.dataSet = {...this.dataReset}
+      this.$v.$reset()
+      this.step = 1
+      this.isShowTost = true
+      this.coutGroup = 0
+      this.setGroupClient = this.resetGroupClient.map(el => el)
 
+      //Показываем сообщени о успешном создании
+      this.showTost()
+
+      //вместо для пуша на сервер)
+      console.log(this.dataSet);
     },
     updateHeight(){
       this.moveTopForm = (this.$refs.wrap.clientHeight/2)-250
       if(this.moveTopForm <= 7) this.moveTopForm = 7
     },
-    loge(){
-      console.log(
-        this.$v.dataSet.name.required &&
-        this.$v.dataSet.surname.required &&
-        this.$v.dataSet.DOB.required 
-       );
-    }
   },
   created(){
     window.addEventListener('resize', this.updateHeight);
   },
   mounted(){
     this.updateHeight()
-    if(localStorage.dataSet){
-      this.dataSet = JSON.parse(localStorage.dataSet)
-      this.coutGroup = JSON.parse(localStorage.coutGroup)
-      this.setGroupClient = JSON.parse(localStorage.setGroupClient)
-    }
+    if(localStorage.dataSet) this.dataSet = JSON.parse(localStorage.dataSet)
+    if(localStorage.coutGroup) this.coutGroup = JSON.parse(localStorage.coutGroup)
+    if(localStorage.setGroupClient) this.setGroupClient = JSON.parse(localStorage.setGroupClient)
+    
+     
+     
+     
   }
 };
 </script>
@@ -640,6 +754,45 @@ export default {
 }
 .step-enter-to{
   opacity: 1;
+}
+
+.toast-enter{
+  transform: translateY(-100%);
+  transition: all .3s ease;
+  opacity: 0;
+}
+.toast-enter-to{
+  transform: translateY(0);
+  transition: all .3s ease;
+  opacity: 1;
+}
+.toast-leave{
+  transform: translateY(0);
+  transition: all .3s ease;
+  opacity: 1;
+}
+.toast-leave-to{
+  transform: translateY(-100%);
+  transition: all .3s ease;
+  opacity: 0;
+}
+
+.toast__mesage{
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  left:calc(70% - 100px);
+  top: calc(25% - 30px);
+  width: 200px;
+  height: 60px;
+  border: 5px solid rgba(46, 46, 46, 0.76);
+  background-color: rgba(71, 71, 71, 0.74);
+  border-radius: 10px;
+  color: #eeeded;
+  font-size: 25px;
+  font-weight: bold;
 }
 
 select{
@@ -763,9 +916,10 @@ select:not(:-internal-list-box) {
   font-size: 14px;
   color: rgb(95, 95, 95);
 }
-.wp__text{
+.wp__text span{
   padding-left: 15px;
 }
+
 .select_client{
   margin-top: 10px;
 }
@@ -1088,6 +1242,8 @@ select:not(:-internal-list-box) {
 
   &.activ{
     background-color: #2853c9;
+    text-shadow: 2px 2px 5px rgb(0, 23, 124);
+    box-shadow: -10px -10px 44px -20px rgba(0, 64, 112, 1) inset;
     color: rgb(230, 227, 227); 
   }
 }
